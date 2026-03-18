@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}TaskMarket{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="{% url 'index' %}" class="nav-logo">
+        <span class="logo-mark">TM</span>
+        <span class="logo-text">TaskMarket</span>
+      </a>
+
+      <div class="nav-links">
+        {% if user.is_authenticated %}
+          <a href="{% url 'task_list' %}" class="nav-link">Browse Tasks</a>
+          <a href="{% url 'leaderboard' %}" class="nav-link">Leaderboard</a>
+          {% if user.profile.role == 'company' %}
+            <a href="{% url 'post_task' %}" class="nav-link nav-link--accent">+ Post Task</a>
+          {% endif %}
+          <div class="nav-user">
+            <a href="{% url 'dashboard' %}" class="nav-user-info">
+              <span class="user-badge" style="--badge-color: {{ user.profile.level.badge_color|default:'#6b7280' }}">
+                {{ user.profile.level.icon|default:'◈' }}
+              </span>
+              <span class="user-name">{{ user.username }}</span>
+            </a>
+            <div class="nav-dropdown">
+              <a href="{% url 'dashboard' %}">Dashboard</a>
+              <a href="{% url 'profile' %}">Profile</a>
+              {% if user.profile.role == 'worker' %}
+                <a href="{% url 'my_submissions' %}">My Submissions</a>
+              {% endif %}
+              <hr>
+              <a href="{% url 'logout' %}" class="dropdown-danger">Log Out</a>
+            </div>
+          </div>
+        {% else %}
+          <a href="{% url 'leaderboard' %}" class="nav-link">Leaderboard</a>
+          <a href="{% url 'login' %}" class="nav-link">Log In</a>
+          <a href="{% url 'register' %}" class="btn btn-sm btn--primary">Get Started</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Messages -->
+  {% if messages %}
+  <div class="messages-container">
+    {% for msg in messages %}
+    <div class="message message--{{ msg.tags }}">
+      <span>{{ msg }}</span>
+      <button onclick="this.parentElement.remove()" class="message-close">×</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Main Content -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="logo-mark">TM</span>
+        <span>TaskMarket — AI-Evaluated Task Platform</span>
+      </div>
+      <div class="footer-links">
+        <a href="{% url 'task_list' %}">Browse Tasks</a>
+        <a href="{% url 'leaderboard' %}">Leaderboard</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'dashboard' %}">Dashboard</a>
+        {% else %}
+          <a href="{% url 'register' %}">Register</a>
+        {% endif %}
+      </div>
+      <div class="footer-copy">© 2025 TaskMarket. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

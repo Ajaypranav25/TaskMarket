@@ -1,0 +1,184 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}TaskMarket — AI-Evaluated Task Platform{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-inner" style="width:100%">
+    <div class="hero-tag">AI-Powered Task Marketplace</div>
+    <h1 class="hero-headline">
+      Work smarter.<br>
+      Get paid <span class="accent">fairly</span>.<br>
+      Level up.
+    </h1>
+    <p class="hero-sub">
+      TaskMarket connects companies with skilled workers. 
+      AI evaluates every submission instantly — no bias, no waiting.
+      Earn more as you prove your quality.
+    </p>
+    <div class="hero-actions">
+      <a href="{% url 'register' %}" class="btn btn--primary btn-lg">Start Earning</a>
+      <a href="{% url 'task_list' %}" class="btn btn--ghost btn-lg">Browse Tasks →</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-value text-amber" data-count="{{ stats.total_tasks }}" data-suffix="+">0+</div>
+        <div class="hero-stat-label">Open Tasks</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value" data-count="{{ stats.total_users }}" data-suffix="+">0+</div>
+        <div class="hero-stat-label">Active Workers</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value text-green" data-count="{{ stats.total_paid|floatformat:0 }}" data-prefix="$">$0</div>
+        <div class="hero-stat-label">Total Paid Out</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section style="padding: 80px 0; border-top: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-eyebrow">How It Works</div>
+    <h2 style="margin-bottom:48px">Three steps to getting paid</h2>
+    <div class="grid-3">
+      <div class="card" style="--i:0; animation: fadeUp 0.5s ease calc(var(--i) * 0.1s) both;">
+        <div style="font-size:2rem;margin-bottom:16px">01</div>
+        <h3 style="margin-bottom:8px">Browse Tasks</h3>
+        <p>Find tasks that match your skill level. Filter by category, reward, and difficulty. Higher levels unlock premium opportunities.</p>
+      </div>
+      <div class="card" style="--i:1; animation: fadeUp 0.5s ease calc(var(--i) * 0.1s) both;">
+        <div style="font-size:2rem;margin-bottom:16px">02</div>
+        <h3 style="margin-bottom:8px">Submit Your Work</h3>
+        <p>Complete tasks and submit your response directly on the platform. Our AI evaluates quality instantly with detailed feedback.</p>
+      </div>
+      <div class="card" style="--i:2; animation: fadeUp 0.5s ease calc(var(--i) * 0.1s) both;">
+        <div style="font-size:2rem;margin-bottom:16px">03</div>
+        <h3 style="margin-bottom:8px">Earn & Level Up</h3>
+        <p>Get paid based on your AI score. Maintain high quality to advance levels and unlock tasks with higher base rewards.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Level System -->
+<section style="padding:80px 0; background: var(--bg-1); border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-eyebrow">Level Progression</div>
+    <h2 style="margin-bottom:8px">Prove your quality. Earn more.</h2>
+    <p style="max-width:500px; margin-bottom:48px">Performance-based progression means the best workers unlock the highest-paying tasks. Your score is your reputation.</p>
+
+    <div class="level-ladder">
+      {% for level in levels %}
+      <div class="level-step level-step--unlocked">
+        <div class="level-icon" style="background: {{ level.badge_color }}22; color: {{ level.badge_color }}">
+          {{ level.icon }}
+        </div>
+        <div class="level-info">
+          <div class="level-name">{{ level.name }}</div>
+          <div class="level-req">
+            {% if level.level_number == 1 %}Starting Level{% else %}
+              Avg. score ≥ {{ level.min_avg_score|floatformat:0 }} · {{ level.min_submissions }} submissions
+            {% endif %}
+          </div>
+        </div>
+        <div class="level-mult">{{ level.reward_multiplier }}×</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Featured Tasks -->
+{% if featured_tasks %}
+<section style="padding:80px 0; border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">Live Tasks</div>
+        <h2>Start earning today</h2>
+      </div>
+      <a href="{% url 'task_list' %}" class="btn btn--ghost">View All →</a>
+    </div>
+    <div class="grid-tasks">
+      {% for task in featured_tasks %}
+      <div class="task-card cat--{{ task.category }}">
+        <div class="task-meta">
+          <span class="cat-badge">{{ task.get_category_display }}</span>
+          {% if task.min_level %}
+            <span class="badge badge--gray" style="font-size:0.65rem">Lv.{{ task.min_level.level_number }}+</span>
+          {% endif %}
+        </div>
+        <div class="task-title">{{ task.title }}</div>
+        <div class="task-desc">{{ task.description }}</div>
+        <div class="task-footer">
+          <div class="task-reward">${{ task.reward }}</div>
+          <a href="{% url 'login' %}" class="btn btn-sm btn--primary">View Task</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Top Workers -->
+{% if stats.top_workers %}
+<section style="padding:80px 0; background:var(--bg-1); border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-eyebrow">Leaderboard</div>
+    <h2 style="margin-bottom:32px">Top Performers</h2>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Worker</th>
+              <th>Level</th>
+              <th>Avg Score</th>
+              <th>Submissions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for worker in stats.top_workers %}
+            <tr>
+              <td><span class="rank-badge rank-{{ forloop.counter }}">{{ forloop.counter }}</span></td>
+              <td><strong style="color:var(--text-0)">{{ worker.user.username }}</strong></td>
+              <td>
+                {% if worker.level %}
+                <span style="color:{{ worker.level.badge_color }}">{{ worker.level.icon }} {{ worker.level.name }}</span>
+                {% else %}—{% endif %}
+              </td>
+              <td class="text-mono text-amber">{{ worker.avg_score|floatformat:1 }}</td>
+              <td class="text-mono">{{ worker.total_submissions }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div style="margin-top:16px; text-align:right">
+      <a href="{% url 'leaderboard' %}" class="btn btn--ghost btn-sm">Full Leaderboard →</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- CTA -->
+<section style="padding:100px 0; text-align:center; border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-eyebrow">Join TaskMarket</div>
+    <h2 style="margin-bottom:16px">Ready to start?</h2>
+    <p style="max-width:400px; margin:0 auto 40px">Join thousands of workers and companies already using TaskMarket to get work done and get paid.</p>
+    <div class="hero-actions" style="justify-content:center">
+      <a href="{% url 'register' %}?role=worker" class="btn btn--primary btn-lg">I want to earn</a>
+      <a href="{% url 'register' %}?role=company" class="btn btn--secondary btn-lg">I want to hire</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

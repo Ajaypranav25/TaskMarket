@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+{% block title %}Create Account — TaskMarket{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card" style="max-width:500px">
+    <div class="auth-logo">
+      <span class="logo-mark">TM</span>
+      <span>TaskMarket</span>
+    </div>
+    <h2 style="margin-bottom:6px">Create your account</h2>
+    <p class="text-sm text-muted" style="margin-bottom:28px">Start earning or posting tasks today</p>
+
+    {% if errors %}
+    <div style="margin-bottom:16px">
+      {% for err in errors %}
+      <div class="message message--error" style="position:static;animation:none;margin-bottom:6px;">{{ err }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label">I am a…</label>
+        <div class="role-selector">
+          <div class="role-option">
+            <input type="radio" name="role" id="role-worker" value="worker"
+              {% if form_data.role == 'company' %}{% else %}checked{% endif %}>
+            <label for="role-worker">
+              <span class="role-icon">👷</span>
+              Worker
+            </label>
+          </div>
+          <div class="role-option">
+            <input type="radio" name="role" id="role-company" value="company"
+              {% if form_data.role == 'company' %}checked{% endif %}>
+            <label for="role-company">
+              <span class="role-icon">🏢</span>
+              Company
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" id="company-name-group" style="display:none">
+        <label class="form-label">Company Name</label>
+        <input class="form-input" type="text" name="company_name"
+          value="{{ form_data.company_name|default:'' }}"
+          placeholder="Acme Corp">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" type="text" name="username"
+          value="{{ form_data.username|default:'' }}"
+          placeholder="your_username" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" name="email"
+          value="{{ form_data.email|default:'' }}"
+          placeholder="you@example.com">
+      </div>
+
+      <div class="grid-2" style="gap:12px">
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" name="password" placeholder="••••••••" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm</label>
+          <input class="form-input" type="password" name="password2" placeholder="••••••••" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn--primary btn-full" style="margin-top:4px">Create Account →</button>
+    </form>
+
+    <p class="text-sm text-muted" style="margin-top:24px; text-align:center;">
+      Already have an account? <a href="{% url 'login' %}" style="color:var(--amber)">Log in</a>
+    </p>
+
+    {% if levels %}
+    <div class="divider"></div>
+    <p class="text-xs text-muted" style="text-align:center;margin-bottom:12px">Workers start at <strong style="color:var(--text-1)">Level 1 — Rookie</strong> and advance through {{ levels|length }} levels based on performance.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ task.title }} — TaskMarket{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:48px;padding-bottom:80px;max-width:900px">
+
+  <!-- Breadcrumb -->
+  <div style="font-size:0.8rem;color:var(--text-3);margin-bottom:24px;font-family:var(--font-mono)">
+    <a href="{% url 'task_list' %}" style="color:var(--text-3)">Tasks</a>
+    <span style="margin:0 8px">/</span>
+    <span>{{ task.title }}</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:32px;align-items:start" class="task-detail-grid">
+    <!-- Left: Task Info -->
+    <div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="cat-badge cat--{{ task.category }}">{{ task.get_category_display }}</span>
+        {% if task.min_level %}
+          <span style="background:{{ task.min_level.badge_color }}22;color:{{ task.min_level.badge_color }};padding:2px 8px;border-radius:100px;font-size:0.7rem;font-family:var(--font-mono);font-weight:600">
+            {{ task.min_level.icon }} Level {{ task.min_level.level_number }}+ Required
+          </span>
+        {% endif %}
+        {% if task.status == 'open' %}
+          <span class="badge badge--green">Open</span>
+        {% else %}
+          <span class="badge badge--gray">{{ task.status|title }}</span>
+        {% endif %}
+      </div>
+
+      <h1 style="font-size:clamp(1.5rem,3vw,2.2rem);margin-bottom:12px">{{ task.title }}</h1>
+
+      <div style="display:flex;gap:16px;font-size:0.8rem;color:var(--text-3);font-family:var(--font-mono);margin-bottom:32px;flex-wrap:wrap">
+        <span>Posted by <strong style="color:var(--text-1)">{{ task.company.profile.company_name|default:task.company.username }}</strong></span>
+        <span>{{ task.created_at|date:"M d, Y" }}</span>
+        <span>Deadline: <strong style="color:var(--amber)">{{ task.deadline|date:"M d, Y" }}</strong></span>
+      </div>
+
+      <div class="card" style="margin-bottom:24px">
+        <h3 style="margin-bottom:12px">Task Description</h3>
+        <div style="color:var(--text-1);line-height:1.8;white-space:pre-wrap">{{ task.description }}</div>
+      </div>
+
+      {% if task.evaluation_criteria %}
+      <div class="card" style="margin-bottom:24px;border-color:rgba(217,119,6,0.2)">
+        <h4 style="margin-bottom:8px;color:var(--amber)">⚡ Evaluation Criteria</h4>
+        <div style="color:var(--text-1);line-height:1.8;font-size:0.9rem;white-space:pre-wrap">{{ task.evaluation_criteria }}</div>
+      </div>
+      {% endif %}
+
+      <!-- Submit Section -->
+      {% if request.user.is_authenticated and profile.role == 'worker' %}
+        {% if submitted %}
+          <div class="card card--accent" style="text-align:center;padding:32px">
+            <div style="font-size:2rem;margin-bottom:8px">✓</div>
+            <h3 style="color:var(--green)">Submission Received</h3>
+            <p style="margin:8px 0 20px">Your work has been submitted and evaluated by AI.</p>
+            {% if user_submission %}
+            <a href="{% url 'submission_detail' user_submission.pk %}" class="btn btn--primary">View Your Results →</a>
+            {% endif %}
+          </div>
+        {% elif not accessible %}
+          <div class="card" style="text-align:center;padding:32px;opacity:0.8">
+            <div style="font-size:2rem;margin-bottom:8px">🔒</div>
+            <h3 style="color:var(--text-2)">Level Locked</h3>
+            <p style="margin:8px 0">This task requires <strong style="color:{{ task.min_level.badge_color }}">{{ task.min_level.icon }} {{ task.min_level.name }}</strong> or higher.</p>
+            <p class="text-sm text-muted">Your current level: <strong>{{ profile.level.name|default:'Rookie' }}</strong></p>
+          </div>
+        {% elif task.status != 'open' %}
+          <div class="card" style="text-align:center;padding:32px">
+            <h3 style="color:var(--text-2)">Task Closed</h3>
+            <p>This task is no longer accepting submissions.</p>
+          </div>
+        {% elif spots_left == 0 %}
+          <div class="card" style="text-align:center;padding:32px">
+            <h3 style="color:var(--text-2)">Full</h3>
+            <p>This task has reached its maximum number of submissions.</p>
+          </div>
+        {% else %}
+          <div>
+            <button id="show-submit-form" class="btn btn--primary btn-lg" style="width:100%;margin-bottom:16px">
+              ✏️ Submit Your Work
+            </button>
+            <div id="submit-form" style="display:none">
+              <div class="card card--accent">
+                <h3 style="margin-bottom:4px">Your Submission</h3>
+                <p class="text-sm text-muted" style="margin-bottom:20px">
+                  Write your best response. AI will evaluate and score it immediately.
+                  Your earnings = reward × (score/100) × level multiplier ({{ profile.level.reward_multiplier }}×).
+                </p>
+                <form method="post" action="{% url 'submit_task' task.pk %}">
+                  {% csrf_token %}
+                  <div class="form-group">
+                    <label class="form-label">Your Response</label>
+                    <textarea class="form-textarea" name="content" rows="10"
+                      placeholder="Write your detailed response here…"
+                      data-minlength="50"
+                      style="min-height:200px" required></textarea>
+                  </div>
+                  <div style="display:flex;gap:10px">
+                    <button type="submit" class="btn btn--primary" style="flex:1">Submit for AI Evaluation →</button>
+                    <button type="button" onclick="document.getElementById('submit-form').style.display='none';document.getElementById('show-submit-form').style.display='inline-flex'" class="btn btn--ghost">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% elif not request.user.is_authenticated %}
+        <div class="card" style="text-align:center;padding:32px">
+          <h3 style="margin-bottom:8px">Want to complete this task?</h3>
+          <p style="margin-bottom:20px">Create an account or log in to submit your work and earn money.</p>
+          <div style="display:flex;gap:10px;justify-content:center">
+            <a href="{% url 'register' %}" class="btn btn--primary">Sign Up</a>
+            <a href="{% url 'login' %}" class="btn btn--ghost">Log In</a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Right: Sidebar -->
+    <div>
+      <div class="card card--accent" style="margin-bottom:16px">
+        <div style="font-family:var(--font-display);font-size:2.2rem;font-weight:800;color:var(--amber-bright)">${{ task.reward }}</div>
+        <div class="text-xs text-muted text-mono" style="margin-top:4px">Base Reward</div>
+        <div class="divider"></div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:0.85rem">
+          <div style="display:flex;justify-content:space-between">
+            <span class="text-muted">Slots left</span>
+            <span class="text-mono" style="color:{% if spots_left == 0 %}var(--red){% elif spots_left < 5 %}var(--amber){% else %}var(--green){% endif %}">{{ spots_left }}/{{ task.max_submissions }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span class="text-muted">Submitted</span>
+            <span class="text-mono">{{ task.submission_count }}</span>
+          </div>
+          {% if task.avg_score %}
+          <div style="display:flex;justify-content:space-between">
+            <span class="text-muted">Avg Score</span>
+            <span class="text-mono text-amber">{{ task.avg_score }}</span>
+          </div>
+          {% endif %}
+          <div style="display:flex;justify-content:space-between">
+            <span class="text-muted">Deadline</span>
+            <span class="text-mono">{{ task.deadline|date:"M d, Y" }}</span>
+          </div>
+        </div>
+      </div>
+
+      {% if request.user.is_authenticated and profile.level %}
+      <div class="card" style="font-size:0.8rem;margin-bottom:16px">
+        <div class="text-xs text-muted text-mono" style="margin-bottom:8px">Your Level Bonus</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="color:{{ profile.level.badge_color }};font-size:1.1rem">{{ profile.level.icon }}</span>
+          <span style="color:var(--text-0);font-weight:600">{{ profile.level.name }}</span>
+          <span class="text-mono text-green" style="margin-left:auto">{{ profile.level.reward_multiplier }}×</span>
+        </div>
+        <div style="margin-top:8px;color:var(--text-3);font-family:var(--font-mono)">
+          Max possible: <strong style="color:var(--green)">${{ task.reward|floatformat:2 }} × {{ profile.level.reward_multiplier }} = ${% widthratio task.reward 1 profile.level.reward_multiplier %}</strong>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Top submissions -->
+      {% if top_submissions %}
+      <div class="card">
+        <div class="text-xs text-muted text-mono" style="margin-bottom:12px">TOP SUBMISSIONS</div>
+        {% for sub in top_submissions %}
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
+          <div style="width:24px;height:24px;border-radius:50%;background:var(--bg-4);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:{% if forloop.counter == 1 %}#fbbf24{% elif forloop.counter == 2 %}#94a3b8{% else %}#d97706{% endif %}">
+            {{ forloop.counter }}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.8rem;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ sub.worker.username }}</div>
+          </div>
+          <div class="text-mono" style="font-size:0.85rem;font-weight:700;color:{{ sub.score_color }}">{{ sub.ai_score|floatformat:0 }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+@media (max-width: 700px) {
+  .task-detail-grid { grid-template-columns: 1fr !important; }
+}
+</style>
+{% endblock %}

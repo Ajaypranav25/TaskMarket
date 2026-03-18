@@ -1,0 +1,177 @@
+{% extends 'core/base.html' %}
+{% block title %}Company Dashboard — TaskMarket{% endblock %}
+
+{% block content %}
+<div class="dash-layout">
+  <aside class="dash-sidebar">
+    <div style="padding:0 12px 20px;border-bottom:1px solid var(--border);margin-bottom:12px">
+      <div style="font-weight:700;color:var(--text-0)">{{ profile.company_name|default:request.user.username }}</div>
+      <div style="font-size:0.75rem;color:var(--text-3);font-family:var(--font-mono)">Company Account</div>
+    </div>
+    <div class="sidebar-section-label">Manage</div>
+    <a href="{% url 'company_dashboard' %}" class="sidebar-link sidebar-link--active">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+    <a href="{% url 'post_task' %}" class="sidebar-link" style="color:var(--amber)">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Post New Task
+    </a>
+    <a href="{% url 'profile' %}" class="sidebar-link">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </a>
+    <a href="{% url 'logout' %}" class="sidebar-link">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Log Out
+    </a>
+  </aside>
+
+  <div class="dash-main">
+    <div style="margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="section-eyebrow">Company Dashboard</div>
+        <h2>{{ profile.company_name|default:request.user.username }}</h2>
+      </div>
+      <a href="{% url 'post_task' %}" class="btn btn--primary">+ Post New Task</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid-4" style="margin-bottom:32px">
+      <div class="stat-card">
+        <div class="stat-value text-amber" data-count="{{ total_tasks }}">0</div>
+        <div class="stat-label">Total Tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value text-green" data-count="{{ open_count }}">0</div>
+        <div class="stat-label">Open</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" data-count="{{ closed_count }}">0</div>
+        <div class="stat-label">Closed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" data-count="{{ total_submissions }}">0</div>
+        <div class="stat-label">Submissions</div>
+      </div>
+    </div>
+
+    <!-- My Tasks -->
+    <div style="margin-bottom:32px">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Your Tasks</div>
+          <h3>Posted Tasks</h3>
+        </div>
+        <a href="{% url 'post_task' %}" class="btn btn--ghost btn-sm">+ New Task</a>
+      </div>
+
+      {% if my_tasks %}
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Category</th>
+                <th>Reward</th>
+                <th>Submissions</th>
+                <th>Avg Score</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for task in my_tasks %}
+              <tr>
+                <td>
+                  <a href="{% url 'task_detail' task.pk %}" style="color:var(--text-0);font-weight:600">{{ task.title }}</a>
+                </td>
+                <td><span class="cat-badge cat--{{ task.category }}">{{ task.get_category_display }}</span></td>
+                <td class="text-mono text-amber">${{ task.reward }}</td>
+                <td class="text-mono">{{ task.submission_count }}</td>
+                <td class="text-mono">
+                  {% if task.avg_score %}
+                  <span style="color:var(--green)">{{ task.avg_score }}</span>
+                  {% else %}—{% endif %}
+                </td>
+                <td>
+                  {% if task.status == 'open' %}
+                    <span class="badge badge--green">Open</span>
+                  {% elif task.status == 'closed' %}
+                    <span class="badge badge--gray">Closed</span>
+                  {% else %}
+                    <span class="badge badge--amber">{{ task.status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div style="display:flex;gap:6px">
+                    <a href="{% url 'task_submissions' task.pk %}" class="btn btn-sm btn--ghost">Submissions</a>
+                    {% if task.status == 'open' %}
+                    <a href="{% url 'close_task' task.pk %}" class="btn btn-sm btn--danger"
+                       data-confirm="Close this task? It will stop accepting new submissions.">Close</a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <h3>No tasks posted yet</h3>
+        <p>Post your first task to start receiving submissions.</p>
+        <a href="{% url 'post_task' %}" class="btn btn--primary" style="margin-top:16px">Post a Task</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Recent Submissions -->
+    {% if recent_submissions %}
+    <div>
+      <div class="section-eyebrow" style="margin-bottom:8px">Recent Activity</div>
+      <h3 style="margin-bottom:16px">Latest Submissions</h3>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Worker</th>
+                <th>Task</th>
+                <th>AI Score</th>
+                <th>Grade</th>
+                <th>Date</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sub in recent_submissions %}
+              <tr>
+                <td style="font-weight:600;color:var(--text-0)">{{ sub.worker.username }}</td>
+                <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ sub.task.title }}</td>
+                <td>
+                  {% if sub.ai_score is not None %}
+                  <span class="text-mono" style="color:{{ sub.score_color }};font-weight:700">{{ sub.ai_score|floatformat:0 }}</span>
+                  {% else %}<span class="text-muted">pending</span>{% endif %}
+                </td>
+                <td>
+                  {% if sub.ai_score is not None %}
+                  <span class="text-xs" style="color:{{ sub.score_color }}">{{ sub.score_grade }}</span>
+                  {% else %}—{% endif %}
+                </td>
+                <td class="text-xs text-muted text-mono">{{ sub.submitted_at|date:"M d" }}</td>
+                <td><a href="{% url 'submission_detail' sub.pk %}" class="btn btn-sm btn--ghost">View</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

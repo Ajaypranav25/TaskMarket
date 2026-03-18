@@ -1,0 +1,78 @@
+{% extends 'core/base.html' %}
+{% block title %}My Submissions — TaskMarket{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:48px;padding-bottom:80px">
+  <div style="margin-bottom:32px">
+    <div class="section-eyebrow">My Work</div>
+    <h1 style="font-size:2rem">My Submissions</h1>
+  </div>
+
+  {% if submissions %}
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Category</th>
+            <th>Score</th>
+            <th>Grade</th>
+            <th>Earned</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sub in submissions %}
+          <tr>
+            <td style="max-width:220px">
+              <a href="{% url 'task_detail' sub.task.pk %}" style="color:var(--text-0);font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                {{ sub.task.title }}
+              </a>
+            </td>
+            <td><span class="cat-badge cat--{{ sub.task.category }}">{{ sub.task.get_category_display }}</span></td>
+            <td>
+              {% if sub.ai_score is not None %}
+              <span class="text-mono" style="font-weight:700;color:{{ sub.score_color }};font-size:1.05rem">{{ sub.ai_score|floatformat:0 }}</span>
+              <div class="score-bar" style="width:60px;margin-top:4px">
+                <div style="height:4px;border-radius:100px;width:{{ sub.ai_score|floatformat:0 }}%;background:{{ sub.score_color }}"></div>
+              </div>
+              {% else %}—{% endif %}
+            </td>
+            <td style="color:{{ sub.score_color }};font-size:0.8rem;font-weight:600">{{ sub.score_grade }}</td>
+            <td>
+              {% if sub.earnings %}
+              <span class="text-mono text-green" style="font-weight:700">${{ sub.earnings }}</span>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if sub.status == 'evaluated' %}
+                <span class="badge badge--green">Evaluated</span>
+              {% elif sub.status == 'pending' %}
+                <span class="badge badge--amber">Pending</span>
+              {% elif sub.status == 'evaluating' %}
+                <span class="badge badge--blue">Evaluating</span>
+              {% else %}
+                <span class="badge badge--gray">{{ sub.status }}</span>
+              {% endif %}
+            </td>
+            <td class="text-xs text-muted text-mono">{{ sub.submitted_at|date:"M d, Y" }}</td>
+            <td><a href="{% url 'submission_detail' sub.pk %}" class="btn btn-sm btn--ghost">View →</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📄</div>
+    <h3>No submissions yet</h3>
+    <p>Complete tasks to see your submissions and AI scores here.</p>
+    <a href="{% url 'task_list' %}" class="btn btn--primary" style="margin-top:16px">Browse Tasks →</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

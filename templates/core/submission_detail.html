@@ -1,0 +1,105 @@
+{% extends 'core/base.html' %}
+{% block title %}Submission Results — TaskMarket{% endblock %}
+
+{% block content %}
+<div class="container-sm" style="padding-top:48px;padding-bottom:80px">
+
+  <div style="font-size:0.8rem;color:var(--text-3);margin-bottom:24px;font-family:var(--font-mono)">
+    <a href="{% url 'dashboard' %}" style="color:var(--text-3)">Dashboard</a>
+    <span style="margin:0 8px">/</span>
+    <a href="{% url 'task_detail' submission.task.pk %}" style="color:var(--text-3)">{{ submission.task.title }}</a>
+    <span style="margin:0 8px">/</span>
+    Submission
+  </div>
+
+  <!-- Score Hero -->
+  {% if submission.status == 'evaluated' and submission.ai_score is not None %}
+  <div class="card" style="background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%); border-color: {{ submission.score_color }}44; margin-bottom:24px; padding:40px; text-align:center; position:relative; overflow:hidden;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 100%, {{ submission.score_color }}0a, transparent);pointer-events:none"></div>
+    <div style="font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--text-3);margin-bottom:12px">AI Evaluation Score</div>
+    <div style="font-family:var(--font-display);font-size:5rem;font-weight:800;color:{{ submission.score_color }};line-height:1;margin-bottom:8px" data-count="{{ submission.ai_score|floatformat:0 }}" data-suffix="/100">0/100</div>
+    <div style="font-size:1.1rem;font-weight:600;color:{{ submission.score_color }}">{{ submission.score_grade }}</div>
+    {% if submission.earnings %}
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+      <div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">Earnings</div>
+      <div style="font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--green)" data-count="{{ submission.earnings }}" data-prefix="$" data-float="true">$0</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- AI Feedback -->
+  <div class="card" style="margin-bottom:16px">
+    <h3 style="margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <span style="width:20px;height:20px;background:var(--amber);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:var(--bg-0)">AI</span>
+      AI Feedback
+    </h3>
+    <p style="line-height:1.8;color:var(--text-1)">{{ submission.ai_feedback }}</p>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:24px">
+    <!-- Strengths -->
+    {% if strengths %}
+    <div class="card" style="border-color:rgba(16,185,129,0.2)">
+      <h4 style="margin-bottom:12px;color:var(--green)">✓ Strengths</h4>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+        {% for s in strengths %}
+        <li style="display:flex;gap:10px;font-size:0.875rem;color:var(--text-1)">
+          <span style="color:var(--green);flex-shrink:0;margin-top:2px">●</span>
+          {{ s }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- Improvements -->
+    {% if improvements %}
+    <div class="card" style="border-color:rgba(245,158,11,0.2)">
+      <h4 style="margin-bottom:12px;color:var(--amber)">↑ Areas to Improve</h4>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+        {% for i in improvements %}
+        <li style="display:flex;gap:10px;font-size:0.875rem;color:var(--text-1)">
+          <span style="color:var(--amber);flex-shrink:0;margin-top:2px">●</span>
+          {{ i }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+
+  {% elif submission.status == 'pending' or submission.status == 'evaluating' %}
+  <div class="card" style="text-align:center;padding:48px;margin-bottom:24px">
+    <div style="font-size:2.5rem;margin-bottom:16px;animation:spin 2s linear infinite;display:inline-block">⟳</div>
+    <h3 style="margin-bottom:8px">Evaluating Your Submission</h3>
+    <p>AI is reviewing your work. This usually takes a few seconds.</p>
+  </div>
+  <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+  {% else %}
+  <div class="card" style="text-align:center;padding:32px;margin-bottom:24px">
+    <h3 style="margin-bottom:8px">Evaluation Status: {{ submission.status|title }}</h3>
+  </div>
+  {% endif %}
+
+  <!-- Submission Content -->
+  <div class="card" style="margin-bottom:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <h3>Your Submission</h3>
+      <div style="font-size:0.75rem;color:var(--text-3);font-family:var(--font-mono)">
+        Submitted {{ submission.submitted_at|date:"M d, Y — H:i" }}
+      </div>
+    </div>
+    <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;white-space:pre-wrap;line-height:1.8;font-size:0.9rem;color:var(--text-1)">{{ submission.content }}</div>
+  </div>
+
+  <!-- Actions -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <a href="{% url 'task_detail' submission.task.pk %}" class="btn btn--ghost">← Back to Task</a>
+    <a href="{% url 'task_list' %}" class="btn btn--secondary">Browse More Tasks</a>
+    {% if request.user == submission.worker %}
+    <a href="{% url 'my_submissions' %}" class="btn btn--ghost" style="margin-left:auto">All My Submissions →</a>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

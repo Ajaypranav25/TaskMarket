@@ -1,0 +1,123 @@
+{% extends 'core/base.html' %}
+{% block title %}My Profile — TaskMarket{% endblock %}
+
+{% block content %}
+<div class="container-sm" style="padding-top:48px;padding-bottom:80px">
+  <div style="margin-bottom:32px">
+    <div class="section-eyebrow">Account</div>
+    <h1 style="font-size:2rem">My Profile</h1>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:24px;align-items:start">
+    <!-- Stats -->
+    <div>
+      <div class="card card--accent" style="text-align:center;padding:32px;margin-bottom:16px">
+        <div style="font-size:2.5rem;margin-bottom:4px">
+          {% if profile.level %}{{ profile.level.icon }}{% else %}◈{% endif %}
+        </div>
+        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:{{ profile.level.badge_color|default:'#6b7280' }}">
+          {{ profile.level.name|default:'Rookie' }}
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-3);font-family:var(--font-mono);margin-bottom:16px">
+          Level {{ profile.level.level_number|default:1 }}
+        </div>
+
+        {% if profile.level %}
+        <div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-4);font-family:var(--font-mono);margin-bottom:6px">
+            <span>Progress to next level</span>
+            <span>{{ profile.level_progress }}%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" data-width="{{ profile.level_progress }}" style="width:0%"></div>
+          </div>
+          {% if profile.next_level %}
+          <div style="font-size:0.7rem;color:var(--text-4);margin-top:4px">Next: {{ profile.next_level.name }}</div>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="grid-2" style="gap:10px">
+        <div class="stat-card">
+          <div class="stat-value text-amber" data-count="{{ profile.total_earnings|floatformat:2 }}" data-prefix="$" data-float="true">$0</div>
+          <div class="stat-label">Earned</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" data-count="{{ profile.avg_score|floatformat:1 }}" data-float="true">0</div>
+          <div class="stat-label">Avg Score</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" data-count="{{ profile.total_submissions }}">0</div>
+          <div class="stat-label">Submitted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ profile.level.reward_multiplier|default:'1.0' }}×</div>
+          <div class="stat-label">Multiplier</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit profile form -->
+    <div class="card">
+      <h3 style="margin-bottom:20px">Edit Profile</h3>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input class="form-input" type="text" value="{{ request.user.username }}" disabled style="opacity:0.6;cursor:not-allowed">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" value="{{ request.user.email }}" disabled style="opacity:0.6;cursor:not-allowed">
+        </div>
+        {% if profile.role == 'company' %}
+        <div class="form-group">
+          <label class="form-label">Company Name</label>
+          <input class="form-input" type="text" name="company_name" value="{{ profile.company_name }}">
+        </div>
+        {% endif %}
+        <div class="form-group">
+          <label class="form-label">Bio</label>
+          <textarea class="form-textarea" name="bio" rows="4" placeholder="Tell others about yourself…">{{ profile.bio }}</textarea>
+        </div>
+        <button type="submit" class="btn btn--primary btn-full">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Recent submissions -->
+  {% if profile.role == 'worker' and submissions %}
+  <div>
+    <h3 style="margin-bottom:16px">Recent Submissions</h3>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Task</th><th>Score</th><th>Earned</th><th>Date</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for sub in submissions %}
+            <tr>
+              <td style="color:var(--text-0);font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ sub.task.title }}</td>
+              <td>
+                {% if sub.ai_score is not None %}
+                <span class="text-mono" style="color:{{ sub.score_color }};font-weight:700">{{ sub.ai_score|floatformat:0 }}</span>
+                {% else %}—{% endif %}
+              </td>
+              <td class="text-mono text-green">{% if sub.earnings %}${{ sub.earnings }}{% else %}—{% endif %}</td>
+              <td class="text-xs text-muted text-mono">{{ sub.submitted_at|date:"M d" }}</td>
+              <td><a href="{% url 'submission_detail' sub.pk %}" class="btn btn-sm btn--ghost">View</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div style="margin-top:12px;text-align:right">
+      <a href="{% url 'my_submissions' %}" class="btn btn--ghost btn-sm">All Submissions →</a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

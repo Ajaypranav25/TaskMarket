@@ -1,0 +1,58 @@
+{% extends 'core/base.html' %}
+{% block title %}Submissions — {{ task.title }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:48px;padding-bottom:80px">
+  <div style="margin-bottom:8px;font-size:0.8rem;color:var(--text-3);font-family:var(--font-mono)">
+    <a href="{% url 'company_dashboard' %}" style="color:var(--text-3)">Dashboard</a>
+    <span style="margin:0 8px">/</span>
+    {{ task.title }}
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:32px">
+    <div>
+      <h2>{{ task.title }}</h2>
+      <p style="margin-top:4px">{{ task.submission_count }} submission{{ task.submission_count|pluralize }} · {% if task.avg_score %}Avg score: <strong style="color:var(--amber)">{{ task.avg_score }}</strong>{% else %}No evaluations yet{% endif %}</p>
+    </div>
+    <a href="{% url 'task_detail' task.pk %}" class="btn btn--ghost btn-sm">View Task →</a>
+  </div>
+
+  {% if submissions %}
+  <div style="display:flex;flex-direction:column;gap:16px">
+    {% for sub in submissions %}
+    <div class="card card--hover" style="border-left:3px solid {{ sub.score_color }}">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <strong style="color:var(--text-0)">{{ sub.worker.username }}</strong>
+            {% if sub.worker.profile.level %}
+            <span style="color:{{ sub.worker.profile.level.badge_color }};font-size:0.75rem">{{ sub.worker.profile.level.icon }} {{ sub.worker.profile.level.name }}</span>
+            {% endif %}
+          </div>
+          <div style="font-size:0.85rem;color:var(--text-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ sub.content }}</div>
+          <div style="font-size:0.7rem;color:var(--text-4);font-family:var(--font-mono);margin-top:8px">{{ sub.submitted_at|date:"M d, Y — H:i" }}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          {% if sub.ai_score is not None %}
+          <div style="font-family:var(--font-display);font-size:2rem;font-weight:800;color:{{ sub.score_color }};line-height:1">{{ sub.ai_score|floatformat:0 }}</div>
+          <div style="font-size:0.75rem;color:{{ sub.score_color }};margin-bottom:4px">{{ sub.score_grade }}</div>
+          <div style="font-size:0.75rem;color:var(--green);font-family:var(--font-mono)">${{ sub.earnings }}</div>
+          {% else %}
+          <span class="badge badge--amber">Pending</span>
+          {% endif %}
+          <div style="margin-top:8px">
+            <a href="{% url 'submission_detail' sub.pk %}" class="btn btn-sm btn--ghost">View Full →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📭</div>
+    <h3>No submissions yet</h3>
+    <p>Workers haven't submitted to this task yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

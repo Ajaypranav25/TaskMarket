@@ -1,0 +1,84 @@
+{% extends 'core/base.html' %}
+{% block title %}Browse Tasks — TaskMarket{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="section-eyebrow">Marketplace</div>
+    <h1>Browse Tasks</h1>
+    <p style="margin-top:8px">Find work that matches your skills and level. Higher levels unlock better-paying tasks.</p>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom:60px">
+  <!-- Filter Bar -->
+  <form method="get" class="filter-bar">
+    <input class="form-input" type="text" name="q" placeholder="Search tasks…" value="{{ current_search }}" style="flex:2">
+    <select class="form-select" name="category" style="flex:1">
+      <option value="">All Categories</option>
+      {% for val, label in categories %}
+      <option value="{{ val }}" {% if current_category == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select class="form-select" name="sort" style="flex:1">
+      <option value="-created_at" {% if current_sort == '-created_at' %}selected{% endif %}>Newest First</option>
+      <option value="-reward" {% if current_sort == '-reward' %}selected{% endif %}>Highest Reward</option>
+      <option value="reward" {% if current_sort == 'reward' %}selected{% endif %}>Lowest Reward</option>
+      <option value="deadline" {% if current_sort == 'deadline' %}selected{% endif %}>Deadline</option>
+    </select>
+    <button type="submit" class="btn btn--primary" style="white-space:nowrap">Filter</button>
+    {% if current_search or current_category %}
+    <a href="{% url 'task_list' %}" class="btn btn--ghost">Clear</a>
+    {% endif %}
+  </form>
+
+  {% if task_data %}
+  <div class="grid-tasks">
+    {% for item in task_data %}
+    {% with task=item.task %}
+    <div class="task-card cat--{{ task.category }} {% if not item.accessible %}task-card--locked{% endif %}">
+      <div class="task-meta">
+        <span class="cat-badge">{{ task.get_category_display }}</span>
+        {% if task.min_level %}
+          <span style="background:{{ task.min_level.badge_color }}22;color:{{ task.min_level.badge_color }};padding:2px 8px;border-radius:100px;font-size:0.65rem;font-family:var(--font-mono);font-weight:600">
+            {{ task.min_level.icon }} Lv.{{ task.min_level.level_number }}+
+          </span>
+        {% endif %}
+        {% if item.submitted %}
+          <span class="badge badge--green" style="margin-left:auto;font-size:0.65rem">✓ Submitted</span>
+        {% elif not item.accessible %}
+          <span class="badge badge--gray" style="margin-left:auto;font-size:0.65rem">🔒 Locked</span>
+        {% endif %}
+      </div>
+
+      <div class="task-title">{{ task.title }}</div>
+      <div class="task-desc">{{ task.description }}</div>
+
+      <div style="display:flex;gap:12px;font-size:0.75rem;color:var(--text-4);font-family:var(--font-mono)">
+        <span>{{ task.submission_count }}/{{ task.max_submissions }} slots</span>
+        <span>Due {{ task.deadline|date:"M d" }}</span>
+      </div>
+
+      <div class="task-footer">
+        <div class="task-reward">${{ task.reward }}</div>
+        {% if item.submitted %}
+          <span class="btn btn-sm btn--ghost" style="opacity:0.6;cursor:default">Submitted</span>
+        {% elif not item.accessible %}
+          <span class="text-xs text-muted" style="font-family:var(--font-mono)">Reach {{ task.min_level.name }} to unlock</span>
+        {% else %}
+          <a href="{% url 'task_detail' task.pk %}" class="btn btn-sm btn--primary">View →</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🔍</div>
+    <h3>No tasks found</h3>
+    <p>Try adjusting your filters or check back later.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
