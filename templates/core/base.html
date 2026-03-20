@@ -5,15 +5,94 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}TaskMarket{% endblock %}</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  
+  <style>
+    /* Instant Styles for Animation */
+    :root {
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.15);
+      --bg-dark: #0f172a;
+    }
+
+    /* Custom Mouse Follower */
+    .cursor-glow {
+      position: fixed;
+      top: 0; left: 0;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: -1;
+      transition: width 0.3s, height 0.3s;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #f8fafc;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Glassmorphism Navbar */
+    .navbar {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(15, 23, 42, 0.8);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+
+    /* Hover Effects for Links */
+    .nav-link {
+      position: relative;
+      transition: color 0.3s ease;
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0; height: 2px;
+      bottom: -4px; left: 0;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    /* Smooth Entrance for Content */
+    .main-content {
+      animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .messages-container {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 9999;
+    }
+  </style>
   {% block extra_css %}{% endblock %}
 </head>
 <body>
+  <div class="cursor-glow" id="cursor-glow"></div>
 
-  <!-- Navigation -->
   <nav class="navbar">
     <div class="nav-inner">
       <a href="{% url 'index' %}" class="nav-logo">
@@ -47,14 +126,21 @@
           </div>
         {% else %}
           <a href="{% url 'leaderboard' %}" class="nav-link">Leaderboard</a>
-          <a href="{% url 'login' %}" class="nav-link">Log In</a>
-          <a href="{% url 'register' %}" class="btn btn-sm btn--primary">Get Started</a>
+          <a href="/accounts/google/login/?next=/dashboard/" class="nav-link">Log In</a>
+          <a href="/accounts/google/login/?next=/dashboard/" class="btn btn-sm btn--primary" style="gap:6px; box-shadow: 0 4px 15px var(--primary-glow);">
+            <svg width="14" height="14" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            Sign in
+          </a>
         {% endif %}
       </div>
     </div>
   </nav>
 
-  <!-- Messages -->
   {% if messages %}
   <div class="messages-container">
     {% for msg in messages %}
@@ -66,12 +152,10 @@
   </div>
   {% endif %}
 
-  <!-- Main Content -->
   <main class="main-content">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Footer -->
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-brand">
@@ -84,13 +168,33 @@
         {% if user.is_authenticated %}
           <a href="{% url 'dashboard' %}">Dashboard</a>
         {% else %}
-          <a href="{% url 'register' %}">Register</a>
+          <a href="/accounts/google/login/?next=/dashboard/">Sign In</a>
         {% endif %}
       </div>
-      <div class="footer-copy">© 2025 TaskMarket. All rights reserved.</div>
+      <div class="footer-copy">© 2026 TaskMarket. All rights reserved.</div>
     </div>
   </footer>
 
+  <script>
+    // Mouse Move Animation (Glow following cursor)
+    const glow = document.getElementById('cursor-glow');
+    document.addEventListener('mousemove', (e) => {
+        glow.style.left = e.clientX + 'px';
+        glow.style.top = e.clientY + 'px';
+    });
+
+    // Button Hover Interaction
+    document.querySelectorAll('.btn, .nav-link').forEach(elem => {
+        elem.addEventListener('mouseenter', () => {
+            glow.style.width = '600px';
+            glow.style.height = '600px';
+        });
+        elem.addEventListener('mouseleave', () => {
+            glow.style.width = '400px';
+            glow.style.height = '400px';
+        });
+    });
+  </script>
   <script src="{% static 'js/main.js' %}"></script>
   {% block extra_js %}{% endblock %}
 </body>
