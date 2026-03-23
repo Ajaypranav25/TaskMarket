@@ -125,3 +125,6 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+# Change these lines in settings.py:
+ACCOUNT_ADAPTER = "core.adapter.NoDirectSignupAdapter"
+SOCIALACCOUNT_ADAPTER = "core.adapter.GoogleSocialAccountAdapter"
