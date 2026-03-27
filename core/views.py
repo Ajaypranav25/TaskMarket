@@ -242,16 +242,20 @@ def submit_task(request, pk):
 
         profile.total_earnings += earnings
         profile.save()
-        profile.update_stats()
+        try:
+            profile.update_stats()
+        except Exception:
+            pass  # stats will self-correct on next submission
 
         messages.success(
             request,
             f'Submission evaluated! Score: {result["score"]}/100 — Earned: ${earnings}',
         )
-    except Exception:
-        submission.status = "pending"
-        submission.save()
-        messages.warning(request, "Submission received. AI evaluation will complete shortly.")
+    except Exception as e:
+            submission.status = "pending"
+            submission.ai_feedback = f"Evaluation failed: {str(e)}"
+            submission.save()
+            messages.warning(request, f"Submission received but AI evaluation failed: {e}")
 
     return redirect("submission_detail", pk=submission.pk)
 
@@ -387,8 +391,11 @@ def profile(request):
     if request.method == "POST":
         bio = request.POST.get("bio", "").strip()
         company_name = request.POST.get("company_name", "").strip()
+        role = request.POST.get("role", "").strip()
         prof.bio = bio
         prof.company_name = company_name
+        if role in ("worker", "company"):
+            prof.role = role
         prof.save()
         messages.success(request, "Profile updated.")
         return redirect("profile")

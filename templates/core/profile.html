@@ -63,24 +63,51 @@
       <h3 style="margin-bottom:20px">Edit Profile</h3>
       <form method="post">
         {% csrf_token %}
+
         <div class="form-group">
           <label class="form-label">Username</label>
           <input class="form-input" type="text" value="{{ request.user.username }}" disabled style="opacity:0.6;cursor:not-allowed">
         </div>
+
         <div class="form-group">
           <label class="form-label">Email</label>
           <input class="form-input" type="email" value="{{ request.user.email }}" disabled style="opacity:0.6;cursor:not-allowed">
         </div>
-        {% if profile.role == 'company' %}
+
         <div class="form-group">
-          <label class="form-label">Company Name</label>
-          <input class="form-input" type="text" name="company_name" value="{{ profile.company_name }}">
+          <label class="form-label">Account Type</label>
+          <div class="role-selector">
+            <div class="role-option">
+              <input type="radio" name="role" id="role-worker" value="worker"
+                {% if profile.role == 'worker' %}checked{% endif %}>
+              <label for="role-worker">
+                <span class="role-icon">👷</span>
+                Worker
+              </label>
+            </div>
+            <div class="role-option">
+              <input type="radio" name="role" id="role-company" value="company"
+                {% if profile.role == 'company' %}checked{% endif %}>
+              <label for="role-company">
+                <span class="role-icon">🏢</span>
+                Company
+              </label>
+            </div>
+          </div>
         </div>
-        {% endif %}
+
+        <div class="form-group" id="company-name-group"
+             style="display:{% if profile.role == 'company' %}block{% else %}none{% endif %}">
+          <label class="form-label">Company Name</label>
+          <input class="form-input" type="text" name="company_name"
+                 value="{{ profile.company_name }}" placeholder="Acme Corp">
+        </div>
+
         <div class="form-group">
           <label class="form-label">Bio</label>
           <textarea class="form-textarea" name="bio" rows="4" placeholder="Tell others about yourself…">{{ profile.bio }}</textarea>
         </div>
+
         <button type="submit" class="btn btn--primary btn-full">Save Changes</button>
       </form>
     </div>

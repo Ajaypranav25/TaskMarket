@@ -13,7 +13,7 @@
   </div>
 
   <!-- Score Hero -->
-  {% if submission.status == 'evaluated' and submission.ai_score is not None %}
+  {% if submission.ai_score is not None %}
   <div class="card" style="background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%); border-color: {{ submission.score_color }}44; margin-bottom:24px; padding:40px; text-align:center; position:relative; overflow:hidden;">
     <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 100%, {{ submission.score_color }}0a, transparent);pointer-events:none"></div>
     <div style="font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--text-3);margin-bottom:12px">AI Evaluation Score</div>
@@ -68,7 +68,7 @@
     {% endif %}
   </div>
 
-  {% elif submission.status == 'pending' or submission.status == 'evaluating' %}
+  {% elif submission.ai_score is None %}
   <div class="card" style="text-align:center;padding:48px;margin-bottom:24px">
     <div style="font-size:2.5rem;margin-bottom:16px;animation:spin 2s linear infinite;display:inline-block">⟳</div>
     <h3 style="margin-bottom:8px">Evaluating Your Submission</h3>
